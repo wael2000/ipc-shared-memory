@@ -26,7 +26,7 @@ RUN mkdir -p ${OSPL_DIR}/var/log ${OSPL_DIR}/var/run ${OSPL_DIR}/var/db \
     && mkdir -p ${APP_DIR}/config
 
 # Add entrypoint and make it executable
-COPY container/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod 0755 /usr/local/bin/entrypoint.sh
 
 # OpenShift: run as arbitrary UID; ensure world-writable where needed
