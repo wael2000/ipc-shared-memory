@@ -1,0 +1,119 @@
+kind: ImageStream
+apiVersion: image.openshift.io/v1
+metadata:
+  name: ipc-shared-memory
+  labels:
+    app: ipc-shared-memory
+    app.kubernetes.io/component: ipc-shared-memory
+    app.kubernetes.io/instance: ipc-shared-memory
+    app.kubernetes.io/name: ipc-shared-memory
+    app.kubernetes.io/part-of: ipc-shared-memory-app
+spec:
+  lookupPolicy:
+    local: false
+---
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: ipc-shared-memory
+  labels:
+    app: ipc-shared-memory
+    app.kubernetes.io/component: ipc-shared-memory
+    app.kubernetes.io/instance: ipc-shared-memory
+    app.kubernetes.io/name: ipc-shared-memory
+    app.kubernetes.io/part-of: ipc-shared-memory-app
+spec:
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'ipc-shared-memory:latest'
+  resources: {}
+  successfulBuildsHistoryLimit: 5
+  failedBuildsHistoryLimit: 5
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+  source:
+    type: Git
+    git:
+      uri: 'https://github.com/wael2000/ipc-shared-memory'
+    contextDir: /cpp
+  triggers:
+    - type: ConfigChange
+    - type: Generic
+      generic:
+        secretReference:
+          name: ipc-shared-memory-generic-webhook-secret
+    - type: GitHub
+      github:
+        secretReference:
+          name: ipc-shared-memory-github-webhook-secret
+  runPolicy: Serial
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: ipc-shared-memory
+  labels:
+    app: ipc-shared-memory
+    app.kubernetes.io/component: ipc-shared-memory
+    app.kubernetes.io/instance: ipc-shared-memory
+    app.kubernetes.io/name: ipc-shared-memory
+    app.kubernetes.io/part-of: ipc-shared-memory-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ipc-shared-memory
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: ipc-shared-memory
+        deployment: ipc-shared-memory
+    spec:
+      volumes:
+        - name: shm-volume
+          emptyDir:
+            medium: Memory
+      containers:
+        - name: producer
+          image: 'image-registry.openshift-image-registry.svc:5000/demo/ipc-shared-memory@sha256:b09547a73c527af3425ddc14ec791c7755bc1fd977bf7125bbef98bda92a3bcf'
+          command:
+            - sh
+            - '-c'
+            - ./producer && tail -f /dev/null
+          resources: {}
+          volumeMounts:
+            - name: shm-volume
+              mountPath: /dev/shm
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+        - name: consumer
+          image: 'image-registry.openshift-image-registry.svc:5000/demo/ipc-shared-memory@sha256:b09547a73c527af3425ddc14ec791c7755bc1fd977bf7125bbef98bda92a3bcf'
+          command:
+            - sh
+            - '-c'
+            - sleep 2 && ./consumer && tail -f /dev/null
+          resources: {}
+          volumeMounts:
+            - name: shm-volume
+              mountPath: /dev/shm
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
