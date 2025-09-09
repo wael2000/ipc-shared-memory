@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opensplice-config
+data:
+  ospl.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <OpenSplice>
+      <Domain>
+        <Name>ospl_unicast</Name>
+        <Id>0</Id>
+        <Service name="ddsi2">
+          <Command>ddsi2</Command>
+          <Environment>
+            <OSPL_LOGPATH>${OSPL_HOME}/var/log</OSPL_LOGPATH>
+          </Environment>
+          <Arguments>
+            <Tracing verbosity="warning"/>
+            <General>
+              <!-- Unicast only -->
+              <AllowMulticast>false</AllowMulticast>
+              <!-- UDP base port; OpenSplice uses ranges from base -->
+              <NetworkAddress>auto</NetworkAddress>
+              <Ports>
+                <Base>7400</Base>
+              </Ports>
+            </General>
+            <Discovery>
+              <ParticipantIndex>auto</ParticipantIndex>
+              <!-- Optional: static peers
+              <Peers>
+                <Peer address="10.0.0.10"/>
+                <Peer address="10.0.0.11"/>
+              </Peers>
+              -->
+            </Discovery>
+            <Compatibility>
+              <StandardsConformance>lax</StandardsConformance>
+            </Compatibility>
+          </Arguments>
+        </Service>
+
+        <!-- Shared memory for same-node comms -->
+        <Service name="shm">
+          <Command>spliced</Command>
+          <Arguments>
+            <SharedMemory>
+              <Enable>true</Enable>
+              <Size>256MB</Size>
+              <LockMemory>false</LockMemory>
+              <BackOff>false</BackOff>
+            </SharedMemory>
+          </Arguments>
+        </Service>
+      </Domain>
+    </OpenSplice>

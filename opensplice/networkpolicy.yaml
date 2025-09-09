@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dds-udp
+spec:
+  podSelector:
+    matchLabels:
+      app: dds-app
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: dds-app
+      ports:
+        - protocol: UDP
+          port: 7400
+        - protocol: UDP
+          port: 7401
+        - protocol: UDP
+          port: 7402
+        - protocol: UDP
+          port: 7500
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: dds-app
+      ports:
+        - protocol: UDP
+          port: 7400
+        - protocol: UDP
+          port: 7401
+        - protocol: UDP
+          port: 7402
+        - protocol: UDP
+          port: 7500

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dds-app
+spec:
+  selector:
+    app: dds-app
+  ports:
+    - name: dds-base
+      port: 7400
+      protocol: UDP
+      targetPort: 7400
+  type: ClusterIP

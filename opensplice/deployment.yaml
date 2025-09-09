@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dds-app
+  labels:
+    app: dds-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dds-app
+  template:
+    metadata:
+      labels:
+        app: dds-app
+    spec:
+      # Default restricted SCC is fine
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: app
+          image: image-registry.openshift-image-registry.svc:5000/your-namespace/dds-app:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: OSPL_URI
+              value: file:///opt/app/config/ospl.xml
+          ports:
+            - name: dds-base
+              containerPort: 7400
+              protocol: UDP
+          volumeMounts:
+            - name: ospl-config
+              mountPath: /opt/app/config
+            - name: dshm
+              mountPath: /dev/shm
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "512Mi"
+      volumes:
+        - name: ospl-config
+          configMap:
+            name: opensplice-config
+            items:
+              - key: ospl.xml
+                path: ospl.xml
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: "256Mi"
