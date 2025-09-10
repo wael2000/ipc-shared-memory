@@ -1,0 +1,5 @@
+🔹 Key Points
+
+UDP signaling → cross-Pod coordination (mimics OpenSplice’s networking service).
+
+Works both inside one Pod and across Pods.
