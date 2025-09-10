@@ -37,7 +37,11 @@ void wait_for_signal() {
 
 int main() {
     // Open shared memory
-    int shm_fd = shm_open(shm_name, O_RDWR, 0666);
+    int shm_fd;
+    while ((shm_fd = shm_open(shm_name, O_RDWR, 0666)) < 0) {
+        perror("shm_open retrying");
+        sleep(1);
+    }
     if (shm_fd < 0) {
         perror("shm_open");
         return 1;
