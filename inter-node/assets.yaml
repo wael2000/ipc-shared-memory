@@ -27,7 +27,7 @@ spec:
   output:
     to:
       kind: ImageStreamTag
-      name: 'ipcudp-signaling:latest'
+      name: 'ipc-udp-signaling:latest'
   resources: {}
   successfulBuildsHistoryLimit: 5
   failedBuildsHistoryLimit: 5
