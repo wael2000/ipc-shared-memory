@@ -15,7 +15,7 @@ const char *sem_full   = "/dds_sem_full";
 const size_t SIZE      = 1024;
 
 // Consumer Service IP/Port (set to your Kubernetes Service)
-const char *consumer_ip   = "127.0.0.1";  // replace with service DNS, e.g., "consumer-svc"
+const char *consumer_ip   = "consumer-svc";  // replace with service DNS, e.g., "consumer-svc"
 const int consumer_port   = 5000;
 
 void send_signal() {
