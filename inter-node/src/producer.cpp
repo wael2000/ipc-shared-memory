@@ -28,7 +28,13 @@ void send_signal() {
     inet_pton(AF_INET, consumer_ip, &addr.sin_addr);
 
     const char *msg = "data_ready";
-    sendto(sock, msg, strlen(msg), 0, (sockaddr*)&addr, sizeof(addr));
+    //sendto(sock, msg, strlen(msg), 0, (sockaddr*)&addr, sizeof(addr));
+    ssize_t sent = sendto(sock, msg, strlen(msg), 0, (sockaddr*)&addr, sizeof(addr));
+    if (sent < 0) {
+        perror("sendto failed");
+    } else {
+        std::cout << "[Producer] Signal sent (" << sent << " bytes)" << std::endl;
+    }
     close(sock);
 }
 
