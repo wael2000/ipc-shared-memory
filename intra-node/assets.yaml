@@ -39,7 +39,7 @@ spec:
     type: Git
     git:
       uri: 'https://github.com/wael2000/ipc-shared-memory'
-    contextDir: /cpp
+    contextDir: /intra-node
   triggers:
     - type: ConfigChange
     - type: Generic
