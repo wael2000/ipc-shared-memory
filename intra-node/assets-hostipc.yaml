@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: producer
-          image: 'image-registry.openshift-image-registry.svc:5000/demo/ipc-shared-memory@sha256:b09547a73c527af3425ddc14ec791c7755bc1fd977bf7125bbef98bda92a3bcf'
+          image: 'image-registry.openshift-image-registry.svc:5000/demo/ipc-shared-memory:latest'
           command:
             - sh
             - '-c'
@@ -32,7 +32,7 @@ spec:
           terminationMessagePolicy: File
           imagePullPolicy: IfNotPresent
         - name: consumer
-          image: 'image-registry.openshift-image-registry.svc:5000/demo/ipc-shared-memory@sha256:b09547a73c527af3425ddc14ec791c7755bc1fd977bf7125bbef98bda92a3bcf'
+          image: 'image-registry.openshift-image-registry.svc:5000/demo/ipc-shared-memory:latest'
           command:
             - sh
             - '-c'
@@ -80,7 +80,7 @@ spec:
     spec:
       containers:
         - name: consumer
-          image: 'image-registry.openshift-image-registry.svc:5000/demo/ipc-shared-memory@sha256:b09547a73c527af3425ddc14ec791c7755bc1fd977bf7125bbef98bda92a3bcf'
+          image: 'image-registry.openshift-image-registry.svc:5000/demo/ipc-shared-memory:latest'
           command:
             - sh
             - '-c'
