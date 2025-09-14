@@ -16,6 +16,7 @@ void print_namespaces() {
                   << std::filesystem::read_symlink(entry.path()) << std::endl;
     }
     std::cout << "======================" << std::endl;
+    
 }
 
 int main() {
