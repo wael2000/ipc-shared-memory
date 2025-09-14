@@ -1,0 +1,120 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: hostipc-shared-memory
+  labels:
+    app: hostipc-shared-memory
+    app.kubernetes.io/component: hostipc-shared-memory
+    app.kubernetes.io/instance: hostipc-shared-memory
+    app.kubernetes.io/name: hostipc-shared-memory
+    app.kubernetes.io/part-of: hostipc-shared-memory-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hostipc-shared-memory
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: hostipc-shared-memory
+        deployment: hostipc-shared-memory
+    spec:
+      containers:
+        - name: producer
+          image: 'image-registry.openshift-image-registry.svc:5000/demo/ipc-shared-memory@sha256:b09547a73c527af3425ddc14ec791c7755bc1fd977bf7125bbef98bda92a3bcf'
+          command:
+            - sh
+            - '-c'
+            - ./producer && tail -f /dev/null
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+        - name: consumer
+          image: 'image-registry.openshift-image-registry.svc:5000/demo/ipc-shared-memory@sha256:b09547a73c527af3425ddc14ec791c7755bc1fd977bf7125bbef98bda92a3bcf'
+          command:
+            - sh
+            - '-c'
+            - sleep 2 && ./consumer && tail -f /dev/null
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      hostIPC: true
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+      nodeName: worker-cluster-jx57b-2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: hostipc-shared-memory-another-consumer
+  labels:
+    app: hostipc-shared-memory-another-consumer
+    app.kubernetes.io/component: hostipc-shared-memory-another-consumer
+    app.kubernetes.io/instance: hostipc-shared-memory-another-consumer
+    app.kubernetes.io/name: hostipc-shared-memory-another-consumer
+    app.kubernetes.io/part-of: hostipc-shared-memory-another-consumer-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hostipc-shared-memory-another-consumer
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: hostipc-shared-memory-another-consumer
+        deployment: hostipc-shared-memory-another-consumer
+    spec:
+      containers:
+        - name: consumer
+          image: 'image-registry.openshift-image-registry.svc:5000/demo/ipc-shared-memory@sha256:b09547a73c527af3425ddc14ec791c7755bc1fd977bf7125bbef98bda92a3bcf'
+          command:
+            - sh
+            - '-c'
+            - sleep 2 && ./consumer && tail -f /dev/null
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      hostIPC: true
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+  nodeName: worker-cluster-jx57b-2
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostipc-exec-pod
+  labels:
+    app: pentest
+spec:
+  hostIPC: true
+  containers:
+  - name: hostipc-pod
+    image: ubuntu
+    command: [ "/bin/sh", "-c", "--" ]
+    args: [ "while true; do sleep 30; done;" ]
+    nodeName: worker-cluster-jx57b-2

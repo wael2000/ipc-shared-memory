@@ -3,9 +3,19 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <cstring>
+#include <filesystem>
 
 const char *shm_name = "/my_shm";
 const size_t SIZE = 4096;
+
+void print_namespaces() {
+    std::cout << "=== Namespace Info ===" << std::endl;
+    for (const auto& entry : std::filesystem::directory_iterator("/proc/self/ns")) {
+        std::cout << entry.path().filename() << " -> " 
+                  << std::filesystem::read_symlink(entry.path()) << std::endl;
+    }
+    std::cout << "======================" << std::endl;
+}
 
 int main() {
     // Create shared memory object
@@ -29,6 +39,7 @@ int main() {
     const char *message = "Hello from Writer (Container 1)!";
     std::memcpy(ptr, message, strlen(message) + 1);
 
+    print_namespaces();
     std::cout << "Writer wrote: " << message << std::endl;
 
     // Keep alive so reader can read

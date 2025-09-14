@@ -14,6 +14,12 @@ RUN microdnf -y install shadow-utils ca-certificates iproute && microdnf -y clea
 # If you already have a flattened runtime dir, just copy it:
 # COPY dist/opensplice-runtime/ ${OSPL_DIR}/
 
+COPY PXXX-VortexOpenSplice-6.9.210323OSS-HDE-x86_64.linux-gcc7-glibc2.27-installer.tar /tmp/
+RUN mkdir -p ${OSPL_DIR} && \
+    tar -xvf /tmp/PXXX-VortexOpenSplice-6.9.210323OSS-HDE-x86_64.linux-gcc7-glibc2.27-installer.tar -C ${OSPL_DIR} --strip-components=1 && \
+    rm -rf /tmp/PXXX-VortexOpenSplice-6.9.210323OSS-HDE-x86_64.linux-gcc7-glibc2.27-installer.tar   
+
+    
 # --- Application bits ---
 # Expect the app binary + any libs staged by CI
 #   bin/${APP_NAME}      -> main executable linking to OpenSplice libs
