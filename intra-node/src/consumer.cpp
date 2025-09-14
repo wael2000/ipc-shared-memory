@@ -3,11 +3,9 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <cstring>
-#include <filesystem>
 
 const char *shm_name = "/my_shm";
 const size_t SIZE = 4096;
-
 
 int main() {
     // Open existing shared memory
@@ -23,7 +21,7 @@ int main() {
         perror("mmap");
         return 1;
     }
-
+    
     // Read message
     std::cout << "Reader read: " << static_cast<char*>(ptr) << std::endl;
 
