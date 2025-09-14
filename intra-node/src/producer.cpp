@@ -44,7 +44,6 @@ int main() {
 
     // std::memcpy(ptr, message, strlen(message) + 1);
 
-    print_namespaces();
     std::cout << "Writer wrote: " << message << std::endl;
 
     // Keep alive so reader can read
