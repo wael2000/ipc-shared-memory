@@ -39,7 +39,9 @@ int main() {
 
     // Append this consumer's IPC namespace info
     std::string full_message = producer_message + 
-                               " | Reader IPC=" + get_namespace_id("ipc");
+                               " [ Reader IPC=" + get_namespace_id("ipc") +
+                               " | PID=" + get_namespace_id("pid") + 
+                               " ] ";
 
     std::cout << "Reader read: " << full_message << std::endl;
 
