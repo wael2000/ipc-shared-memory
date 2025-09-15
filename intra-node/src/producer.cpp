@@ -38,7 +38,7 @@ int main() {
     }
 
     // Write message
-    const char *message = "Hello from Writer (Container 1)!";
+    const char *base_message = "Hello from Writer (Container 1)!";
     std::string full_message = std::string(base_message) + 
                             " | IPC=" + get_namespace_id("ipc");
 
