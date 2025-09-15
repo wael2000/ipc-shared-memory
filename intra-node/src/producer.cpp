@@ -40,9 +40,9 @@ int main() {
     // Write message
     const char *base_message = "Hello from Writer (Container 1)!";
     std::string full_message = std::string(base_message) + 
-                            " [ IPC=" + get_namespace_id("ipc") +
+                            " [ Writer IPC=" + get_namespace_id("ipc") +
                             " | PID=" + get_namespace_id("pid") +
-                            " ]";
+                            " ] ";
 
     // Write to shared memory
     std::memcpy(ptr, full_message.c_str(), full_message.size() + 1);
