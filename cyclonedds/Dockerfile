@@ -49,4 +49,4 @@ RUN groupadd -r cyclonedds && useradd -r -g cyclonedds cyclonedds
 USER cyclonedds
 
 # Define the ENTRYPOINT
-# ENTRYPOINT ["/app/publisher"]
+#ENTRYPOINT ["/app/publisher"]
