@@ -1,0 +1,37 @@
+# ========================
+# STAGE 1: THE BUILDER
+# ========================
+FROM registry.access.redhat.com/ubi8/ubi AS builder
+
+# Install all build-time dependencies.
+RUN dnf install -y git cmake make gcc-c++ tar bash shadow-utils && dnf clean all
+
+# Set a persistent environment variable for the install prefix
+ENV CYCLONEDDS_PREFIX=/usr/local
+
+# Clone, build, and install Cyclone DDS.
+RUN git clone https://github.com/eclipse-cyclonedds/cyclonedds.git /tmp/cyclonedds && \
+    mkdir -p /tmp/cyclonedds/build && \
+    cd /tmp/cyclonedds/build && \
+    cmake -DCMAKE_INSTALL_PREFIX=${CYCLONEDDS_PREFIX} .. && \
+    make && \
+    make install
+
+# =====================================================================
+# DEBUGGING STEP 1: VERIFY THE INSTALLATION PATH
+# =====================================================================
+# This command will list the contents of the /usr/local/include directory
+# to see if the 'dds' folder was created.
+RUN echo "--- Listing contents of /usr/local/include ---" && ls -R /usr/local/include
+
+# =====================================================================
+# DEBUGGING STEP 2: FIND THE FILE NO MATTER WHERE IT IS
+# =====================================================================
+# This command will search the entire filesystem for 'dds.hpp'.
+RUN echo "--- Searching for dds.hpp everywhere ---" && find / -name "dds.hpp"
+
+# =====================================================================
+# STAGE 2: THE FINAL IMAGE (The following steps will not run if the
+# above debugging commands fail.)
+# =====================================================================
+# ... (rest of the multi-stage build from the previous answer) ...
