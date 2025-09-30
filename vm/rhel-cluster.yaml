@@ -1,0 +1,249 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: rhel-ha-01
+  labels:
+    app: rhel-ha
+spec:
+  dataVolumeTemplates:
+    - metadata:
+        name: rhel-ha-01
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: rhel8
+          namespace: openshift-virtualization-os-images
+        storage:
+          accessModes:
+            - ReadWriteMany
+          resources:
+            requests:
+              storage: 30Gi
+          storageClassName: ocs-external-storagecluster-ceph-rbd
+          volumeMode: Block
+  instancetype:
+    name: u1.medium
+  preference:
+    name: rhel.8
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: rhel-ha-01
+        network.kubevirt.io/headlessService: headless
+        vm.kubevirt.io/name: rhel-ha-01
+    spec:
+      domain:
+        devices:
+          disks: []
+          interfaces:
+            - masquerade: {}
+              name: default
+      networks:
+        - name: default
+          pod: {}
+      subdomain: headless
+      volumes:
+        - dataVolume:
+            name: rhel-ha-01
+          name: rootdisk
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            networkData: |
+              version: 2
+              ethernets:
+                eth0:
+                  dhcp4: true
+            userData: |
+              #cloud-config
+              chpasswd:
+                expire: false
+              hostname: rhel-ha-01
+              fqdn: rhel-ha-01
+              ssh_pwauth: true
+              preserve_hostname: false              
+              password: jzy2-4fm2-6ajn
+              user: rhel
+              users:
+                - default
+                - name: hacluster
+                  gecos: "HA Cluster User"
+                  sudo: ALL=(ALL) NOPASSWD:ALL
+                  groups: users, admin
+                  lock_passwd: false
+                  passwd: jzy2-4fm2-6ajn
+              write_files:
+                - path: /etc/hosts
+                  content: |
+                    127.0.0.1   localhost
+              runcmd:
+                - [ sh, -c, "if ! subscription-manager identity >/dev/null 2>&1; then subscription-manager register --activationkey=kasra_at_redhat_demo_activation_key --org=11009103 || true; fi" ]
+                - [ sh, -c, "subscription-manager repos --enable=rhel-8-for-x86_64-highavailability-rpms || true" ]
+                - [ sh, -c, "dnf -y update || true" ]
+                - [ sh, -c, "dnf -y install pcs pacemaker fence-agents-all resource-agents || (sleep 10 && dnf -y install pcs pacemaker fence-agents-all resource-agents)" ]
+                - [ sh, -c, "systemctl enable --now pcsd" ]
+                - [ sh, -c, "sudo yum install firewalld -y" ]
+                - [ sh, -c, "sudo systemctl enable firewalld" ]
+                - [ sh, -c, "sudo systemctl start firewalld" ]
+                - [ sh, -c, "if systemctl is-active firewalld >/dev/null 2>&1; then firewall-cmd --permanent --add-service=high-availability && firewall-cmd --reload; fi" ]
+                - [ sh, -c, "hostnamectl set-hostname rhel-ha-01" ]
+                - [ sh, -c, "sudo yum install nmap-ncat -y" ]
+                - [ sh, -c, "sleep 5; ip addr; ping -c2 rhel-ha-02 || true" ]
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: rhel-ha-02
+  labels:
+    app: rhel-ha
+spec:
+  dataVolumeTemplates:
+    - metadata:
+        name: rhel-ha-02
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: rhel8
+          namespace: openshift-virtualization-os-images
+        storage:
+          accessModes:
+            - ReadWriteMany
+          resources:
+            requests:
+              storage: 30Gi
+          storageClassName: ocs-external-storagecluster-ceph-rbd
+          volumeMode: Block
+  instancetype:
+    name: u1.medium
+  preference:
+    name: rhel.8
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: rhel-ha-02
+        network.kubevirt.io/headlessService: headless
+        vm.kubevirt.io/name: rhel-ha-02
+    spec:
+      domain:
+        devices:
+          disks: []
+          interfaces:
+            - masquerade: {}
+              name: default
+      networks:
+        - name: default
+          pod: {}
+      subdomain: headless
+      volumes:
+        - dataVolume:
+            name: rhel-ha-02
+          name: rootdisk
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            networkData: |
+              version: 2
+              ethernets:
+                eth0:
+                  dhcp4: true          
+            userData: |
+              #cloud-config
+              chpasswd:
+                expire: false
+              hostname: rhel-ha-02
+              fqdn: rhel-ha-02
+              ssh_pwauth: true
+              preserve_hostname: false              
+              password: jzy2-4fm2-6ajn
+              user: rhel
+              users:
+                - default
+                - name: hacluster
+                  gecos: "HA Cluster User"
+                  sudo: ALL=(ALL) NOPASSWD:ALL
+                  groups: users, admin
+                  lock_passwd: false
+                  passwd: jzy2-4fm2-6ajn
+              write_files:
+                - path: /etc/hosts
+                  content: |
+                    127.0.0.1   localhost
+              runcmd:
+                - [ sh, -c, "if ! subscription-manager identity >/dev/null 2>&1; then subscription-manager register --activationkey=kasra_at_redhat_demo_activation_key --org=11009103 || true; fi" ]
+                - [ sh, -c, "subscription-manager repos --enable=rhel-8-for-x86_64-highavailability-rpms || true" ]
+                - [ sh, -c, "dnf -y update || true" ]
+                - [ sh, -c, "dnf -y install pcs pacemaker fence-agents-all resource-agents || (sleep 10 && dnf -y install pcs pacemaker fence-agents-all resource-agents)" ]
+                - [ sh, -c, "systemctl enable --now pcsd" ]
+                - [ sh, -c, "sudo yum install firewalld -y" ]
+                - [ sh, -c, "sudo systemctl enable firewalld" ]
+                - [ sh, -c, "sudo systemctl start firewalld" ]                
+                - [ sh, -c, "if systemctl is-active firewalld >/dev/null 2>&1; then firewall-cmd --permanent --add-service=high-availability && firewall-cmd --reload; fi" ]
+                - [ sh, -c, "hostnamectl set-hostname rhel-ha-02" ]
+                - [ sh, -c, "sudo yum install nmap-ncat -y" ]                
+                - [ sh, -c, "sleep 5; ip addr; ping -c2 rhel-ha-01 || true" ]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rhel-ha-01
+spec:
+  selector:
+    vm.kubevirt.io/name: rhel-ha-01
+  ports:
+    - protocol: TCP
+      name: tcp-3306
+      port: 3306
+      targetPort: 3306
+    - protocol: TCP
+      name: tcp-4567
+      port: 4567
+      targetPort: 4567
+    - protocol: TCP
+      name: tcp-4568
+      port: 4568
+      targetPort: 4568
+    - protocol: TCP
+      name: tcp-4444
+      port: 4444
+      targetPort: 4444
+    - protocol: TCP
+      name: tcp-2224
+      port: 2224
+      targetPort: 2224
+    - protocol: UDP
+      name: udp-4567
+      port: 4567
+      targetPort: 4567
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rhel-ha-02
+spec:
+  selector:
+    vm.kubevirt.io/name: rhel-ha-02
+  ports:
+    - protocol: TCP
+      name: tcp-3306
+      port: 3306
+      targetPort: 3306
+    - protocol: TCP
+      name: tcp-4567
+      port: 4567
+      targetPort: 4567
+    - protocol: TCP
+      name: tcp-4568
+      port: 4568
+      targetPort: 4568
+    - protocol: TCP
+      name: tcp-4444
+      port: 4444
+      targetPort: 4444
+    - protocol: TCP
+      name: tcp-2224
+      port: 2224
+      targetPort: 2224
+    - protocol: UDP
+      name: udp-4567
+      port: 4567
+      targetPort: 4567

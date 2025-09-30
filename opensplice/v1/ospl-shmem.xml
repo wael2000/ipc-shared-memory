@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSplice>
+    <Domain>
+        <Name>SharedMemoryDomain</Name>
+        <Id>0</Id>
+        <SharedMemory>
+            <File>${OSPL_SHARED_MEM_FILE}</File>
+            <Size>${OSPL_SHMEM_SIZE}</Size>
+            <Threshold>${OSPL_SHMEM_THRESHOLD}</Threshold>
+        </SharedMemory>
+        <LeaseManagement>
+            <Enable>True</Enable>
+            <DomainHeartbeatPeriod>
+                <Initial>2.0</Initial>
+                <Increments>
+                    <Increment>5.0</Increment>
+                    <Increment>10.0</Increment>
+                </Increments>
+            </DomainHeartbeatPeriod>
+            <ParticipantLeaseDuration>
+                <Initial>10.0</Initial>
+                <Increments>
+                    <Increment>20.0</Increment>
+                    <Increment>40.0</Increment>
+                </Increments>
+            </ParticipantLeaseDuration>
+        </LeaseManagement>
+    </Domain>
+</OpenSplice>

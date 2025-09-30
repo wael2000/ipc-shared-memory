@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: opensplice-shmem-app
+  labels:
+    app: opensplice-shmem-app
+spec:
+  # This is the crucial part for shared memory.
+  # The emptyDir volume with medium: Memory creates a tmpfs filesystem
+  # that is shared between containers in the pod and provides the /dev/shm
+  # functionality required for OpenSplice's shared memory.
+  volumes:
+  - name: shared-mem-vol
+    emptyDir:
+      medium: Memory
+      # It is a best practice to set a size limit for the shared memory volume
+      # to prevent the pod from consuming all node memory.
+      sizeLimit: 1Gi
+  containers:
+  - name: ospl-daemon-container
+    image: myregistry.io/opensplice/daemon:latest
+    # This is a key configuration. It mounts the shared memory volume
+    # to the /dev/shm path inside the container.
+    volumeMounts:
+    - name: shared-mem-vol
+      mountPath: /dev/shm
+    # The OpenSplice shared memory daemon should run first.
+    # OpenShift will manage the start order if you use an Init Container.
+    # For a simple multi-container pod, they start in parallel, which is
+    # usually fine for OpenSplice as the clients will wait for the daemon.
+    env:
+    - name: OSPL_SHARED_MEM_FILE
+      value: "/dev/shm/opensplice_shm_domain"
+    - name: OSPL_SHMEM_SIZE
+      value: "512MiB"
+    - name: OSPL_SHMEM_THRESHOLD
+      value: "64MiB"
+    securityContext:
+      runAsUser: 1001 # Match the non-root user from the Dockerfile
+      runAsGroup: 1001
+      # Recommended to set an explicit UID/GID for consistent permissions
+    # Liveness and readiness probes for the daemon (optional but recommended)
+    # livenessProbe:
+    #   exec:
+    #     command: ["ospl", "status"]
+    #   initialDelaySeconds: 15
+    #   periodSeconds: 20
+
+  - name: my-app-container
+    image: myregistry.io/opensplice/my-app:latest
+    # Mount the same shared memory volume
+    volumeMounts:
+    - name: shared-mem-vol
+      mountPath: /dev/shm
+    env:
+    # Pass the same environment variables to the application container
+    - name: OSPL_SHARED_MEM_FILE
+      value: "/dev/shm/opensplice_shm_domain"
+    securityContext:
+      runAsUser: 1001
+      runAsGroup: 1001
+
+  # This is the critical part for shared IPC namespace
+  # The default is HostIPC: false, so this is important
+  # Note: The `hostIPC` field is a boolean and is not directly available
+  # in a standard Pod spec for this purpose. The correct way to get shared memory
+  # within a Pod is through the `emptyDir` volume mount, as shown above.
+  # The containers in a Pod automatically share the IPC namespace.
+  # No extra configuration is needed for IPC communication between containers in a single Pod.
+  # hostIPC: true # This is not needed and would be less secure.

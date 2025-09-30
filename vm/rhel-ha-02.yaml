@@ -1,0 +1,79 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: rhel-ha-02
+labels:
+  app: rhel-ha
+spec:
+  dataVolumeTemplates:
+    - metadata:
+        name: rhel-ha-02
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: rhel8
+          namespace: openshift-virtualization-os-images
+        storage:
+          accessModes:
+            - ReadWriteMany
+          resources:
+            requests:
+              storage: 30Gi
+          storageClassName: ocs-external-storagecluster-ceph-rbd
+          volumeMode: Block
+  instancetype:
+    name: u1.medium
+  preference:
+    name: rhel.8
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: rhel-ha-02
+        network.kubevirt.io/headlessService: headless        
+    spec:
+      domain:
+        devices:
+          autoattachPodInterface: false
+          disks: []
+          interfaces:
+            - masquerade: {}
+              name: default
+      networks:
+        - name: default
+          pod: {}
+      subdomain: headless
+      volumes:
+        - dataVolume:
+            name: rhel-ha-02
+          name: rootdisk
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              chpasswd:
+                expire: false
+              password: jzy2-4fm2-6ajn
+              user: rhel              
+              hostname: rhel-ha-02
+              fqdn: rhel-ha-02.local
+              ssh_pwauth: true
+              rh_subscription:
+                activation-key: kasra_at_redhat_demo_activation_key
+                org: 11009103
+                auto-attach: true
+              users:
+                - default
+                - name: hacluster
+                  gecos: "HA Cluster User"
+                  sudo: ALL=(ALL) NOPASSWD:ALL
+                  groups: users, admin
+                  lock_passwd: false
+                  passwd: jzy2-4fm2-6ajn
+              runcmd:
+                - sudo subscription-manager repos --enable=rhel-8-for-x86_64-highavailability-rpms
+                - sudo subscription-manager repos --list-enabled
+                - systemctl enable pcsd --now
+                - sudo dnf install -y pcs pacemaker fence-agents-all resource-agents
+                - systemctl enable pcsd --now                
+                - echo 'HACLUSTER_PASS' | passwd --stdin hacluster

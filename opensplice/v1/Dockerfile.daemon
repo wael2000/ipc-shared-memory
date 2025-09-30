@@ -1,0 +1,30 @@
+# Use a minimal base image, like Red Hat's Universal Base Image (UBI)
+FROM registry.access.redhat.com/ubi8/ubi-minimal
+
+# Set environment variables for OpenSplice installation
+# Replace with your actual OpenSplice version and architecture
+ENV OSPL_HOME=/opt/opensplice \
+    OSPL_URI=file:///etc/ospl/ospl-shmem.xml \
+    PATH=$PATH:/opt/opensplice/bin \
+    LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/opensplice/lib \
+    # The key environment variable for shared memory file location
+    OSPL_SHARED_MEM_FILE=/dev/shm/opensplice_shm_domain
+
+# Copy the OpenSplice distribution files.
+# It's assumed you have the OpenSplice binaries in the same directory as the Dockerfile.
+COPY opensplice-ce-dev-v6.x.x-HDE-x86_64.linux.tar.gz /tmp/
+RUN tar -xvzf /tmp/opensplice-ce-dev-v6.x.x-HDE-x86_64.linux.tar.gz -C /opt \
+    && rm /tmp/opensplice-ce-dev-v6.x.x-HDE-x86_64.linux.tar.gz
+
+# Copy the OpenSplice configuration file
+COPY ospl-shmem.xml /etc/ospl/
+
+# Set a non-root user for security
+RUN groupadd -r opensplice && useradd -r -g opensplice opensplice
+USER opensplice
+
+# Expose ports if you also plan to use networking (DDSI) for inter-pod communication
+# EXPOSE 7400
+
+# Command to start the OpenSplice daemon
+CMD ["/opt/opensplice/bin/ospl", "start"]

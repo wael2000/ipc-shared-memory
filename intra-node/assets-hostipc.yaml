@@ -1,3 +1,57 @@
+kind: ImageStream
+apiVersion: image.openshift.io/v1
+metadata:
+  name: ipc-shared-memory
+  labels:
+    app: ipc-shared-memory
+    app.kubernetes.io/component: ipc-shared-memory
+    app.kubernetes.io/instance: ipc-shared-memory
+    app.kubernetes.io/name: ipc-shared-memory
+    app.kubernetes.io/part-of: ipc-shared-memory-app
+spec:
+  lookupPolicy:
+    local: false
+---
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: ipc-shared-memory
+  labels:
+    app: ipc-shared-memory
+    app.kubernetes.io/component: ipc-shared-memory
+    app.kubernetes.io/instance: ipc-shared-memory
+    app.kubernetes.io/name: ipc-shared-memory
+    app.kubernetes.io/part-of: ipc-shared-memory-app
+spec:
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'ipc-shared-memory:latest'
+  resources: {}
+  successfulBuildsHistoryLimit: 5
+  failedBuildsHistoryLimit: 5
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+  source:
+    type: Git
+    git:
+      uri: 'https://github.com/wael2000/ipc-shared-memory'
+    contextDir: /intra-node
+  triggers:
+    - type: ConfigChange
+    - type: Generic
+      generic:
+        secretReference:
+          name: ipc-shared-memory-generic-webhook-secret
+    - type: GitHub
+      github:
+        secretReference:
+          name: ipc-shared-memory-github-webhook-secret
+  runPolicy: Serial
+---
 kind: Deployment
 apiVersion: apps/v1
 metadata:

@@ -39,3 +39,16 @@
 
 # debug information files
 *.dwo
+
+#archieves
+*.tar
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.gz
+*.tgz
+
+#mac os files
+*.DS_Store
+*Thumbs.db 
