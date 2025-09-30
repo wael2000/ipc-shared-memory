@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CycloneDDS xmlns="https://cdds.io/config">
+    <Domain>
+        <Discovery>
+            <ParticipantIndex>auto</ParticipantIndex>
+            <AllowMulticast>false</AllowMulticast>
+            <Peers>
+                <Peer Address="publisher-service.my-project.svc.cluster.local"/>
+                <Peer Address="subscriber-service.my-project.svc.cluster.local"/>
+            </Peers>
+        </Discovery>
+    </Domain>
+</CycloneDDS>

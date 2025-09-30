@@ -4,17 +4,25 @@ FROM registry.access.redhat.com/ubi8/ubi-minimal
 # Set environment variables for OpenSplice installation
 # Replace with your actual OpenSplice version and architecture
 ENV OSPL_HOME=/opt/opensplice \
+    OSPL_INSTALLER=PXXX-VortexOpenSplice-6.9.210323OSS-HDE-x86.linux-gcc5.4.0-glibc2.23-installer.tar \
     OSPL_URI=file:///etc/ospl/ospl-shmem.xml \
     PATH=$PATH:/opt/opensplice/bin \
     LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/opensplice/lib \
     # The key environment variable for shared memory file location
     OSPL_SHARED_MEM_FILE=/dev/shm/opensplice_shm_domain
 
+# Install dependencies needed for the installer script.
+# This may vary, but common ones include 'tar' and 'bash'.
+# UBI-minimal is very minimal, so we need to install a few things.
+RUN microdnf update -y \
+    && microdnf install -y tar bash shadow-utils \
+    && microdnf clean all
+
 # Copy the OpenSplice distribution files.
 # It's assumed you have the OpenSplice binaries in the same directory as the Dockerfile.
-COPY opensplice-ce-dev-v6.x.x-HDE-x86_64.linux.tar.gz /tmp/
-RUN tar -xvzf /tmp/opensplice-ce-dev-v6.x.x-HDE-x86_64.linux.tar.gz -C /opt \
-    && rm /tmp/opensplice-ce-dev-v6.x.x-HDE-x86_64.linux.tar.gz
+COPY ${OSPL_INSTALLER} /tmp/
+RUN tar -xf /tmp/${OSPL_INSTALLER} -C /opt \
+    && rm /tmp/${OSPL_INSTALLER}
 
 # Copy the OpenSplice configuration file
 COPY ospl-shmem.xml /etc/ospl/
