@@ -6,13 +6,6 @@ ENV OSPL_HOME=/opt/cyclonedds \
     CYCLONEDDS_URI=file:///etc/cyclonedds/cyclonedds.xml
 
 # Install all build-time and runtime dependencies in a single layer.
-# This avoids most dependency-resolution issues.
-#
-# 1. shadow-utils: Provides useradd/groupadd.
-# 2. tar, bash: Required for the build script.
-# 3. git, cmake, make, gcc-c++: The build tools for Cyclone DDS.
-#
-# We skip the 'update' command to avoid conflicting with the base image's pre-installed packages.
 RUN microdnf install -y \
     shadow-utils \
     tar \
@@ -25,21 +18,29 @@ RUN microdnf install -y \
     && rm -rf /var/cache/yum
 
 # Copy the application source code and build it
-COPY app/publisher.cpp /app/publisher.cpp
-COPY app/subscriber.cpp /app/subscriber.cpp
+COPY publisher.cpp /app/publisher.cpp
+COPY subscriber.cpp /app/subscriber.cpp
 
-# Install Cyclone DDS from source
-# Using a separate RUN command for the build process is fine,
-# as the dependencies are now handled.
-RUN git clone https://github.com/eclipse-cyclonedds/cyclonedds.git /tmp/cyclonedds \
-    && mkdir -p /tmp/cyclonedds/build \
-    && cd /tmp/cyclonedds/build \
-    && cmake .. \
-    && make \
-    && make install \
-    && g++ /app/publisher.cpp -o /app/publisher -I/usr/local/include -L/usr/local/lib -lcyclonedds -std=c++11 \
-    && rm -rf /tmp/cyclonedds
-
+# Install Cyclone DDS from source and then compile the application.
+# The issue is that g++ on the same RUN command does not inherit the
+# path settings from the `make install` command.
+RUN git clone https://github.com/eclipse-cyclonedds/cyclonedds.git /tmp/cyclonedds && \
+    mkdir -p /tmp/cyclonedds/build && \
+    cd /tmp/cyclonedds/build && \
+    cmake .. && \
+    make && \
+    # The 'make install' command places headers in /usr/local/include
+    # and libraries in /usr/local/lib
+    make install && \
+    cd /app && \
+    # The -I and -L flags are correct, but we must make sure the build
+    # environment is pointing to the correct locations.
+    g++ publisher.cpp -o publisher \
+        -I/usr/local/include \
+        -L/usr/local/lib \
+        -lcyclonedds -lstdc++ -lpthread -lm -ldl -std=c++11 && \
+    rm -rf /tmp/cyclonedds
+    
 # Copy the configuration file
 COPY cyclonedds.xml /etc/cyclonedds/
 
@@ -47,5 +48,5 @@ COPY cyclonedds.xml /etc/cyclonedds/
 RUN groupadd -r cyclonedds && useradd -r -g cyclonedds cyclonedds
 USER cyclonedds
 
-# Define the ENTRYPOINT, which is the path to our executable.
-#ENTRYPOINT ["/app/publisher"]
+# Define the ENTRYPOINT
+# ENTRYPOINT ["/app/publisher"]
