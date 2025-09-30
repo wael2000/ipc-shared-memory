@@ -18,8 +18,8 @@ RUN microdnf install -y \
     && rm -rf /var/cache/yum
 
 # Copy the application source code and build it
-COPY publisher.cpp /app/publisher.cpp
-COPY subscriber.cpp /app/subscriber.cpp
+COPY app/publisher.cpp /app/publisher.cpp
+COPY app/subscriber.cpp /app/subscriber.cpp
 
 # Install Cyclone DDS from source and then compile the application.
 # The issue is that g++ on the same RUN command does not inherit the
