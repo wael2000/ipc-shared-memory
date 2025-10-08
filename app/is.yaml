@@ -1,0 +1,13 @@
+kind: ImageStream
+apiVersion: image.openshift.io/v1
+metadata:
+  name: ipc-shared-memory
+  labels:
+    app: ipc-shared-memory
+    app.kubernetes.io/component: ipc-shared-memory
+    app.kubernetes.io/instance: ipc-shared-memory
+    app.kubernetes.io/name: ipc-shared-memory
+    app.kubernetes.io/part-of: ipc-shared-memory-app
+spec:
+  lookupPolicy:
+    local: false

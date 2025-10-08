@@ -5,7 +5,7 @@ FROM gcc:latest
 WORKDIR /app
 
 # Copy source code into container
-COPY src/producer.cpp src/consumer.cpp ./
+COPY src/*.cpp ./
 
 # Build both executables
 RUN g++ -o producer producer.cpp -pthread && \
