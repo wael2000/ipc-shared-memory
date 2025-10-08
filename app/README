@@ -1,0 +1,2 @@
+# lift the privileged security context to the default service account
+oc adm policy add-scc-to-user privileged -z default

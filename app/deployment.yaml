@@ -1,0 +1,121 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: ipc-shared-memory
+  labels:
+    app: ipc-shared-memory
+    app.kubernetes.io/component: ipc-shared-memory
+    app.kubernetes.io/instance: ipc-shared-memory
+    app.kubernetes.io/name: ipc-shared-memory
+    app.kubernetes.io/part-of: ipc-shared-memory-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ipc-shared-memory
+  template:
+    metadata:
+      labels:
+        app: ipc-shared-memory
+        deployment: ipc-shared-memory
+    spec:
+      volumes:
+        - name: shm-volume
+          emptyDir:
+            medium: Memory
+      containers:
+        - name: producer
+          image: 'image-registry.openshift-image-registry.svc:5000/ipc/ipc-shared-memory:latest'
+          command:
+            - sh
+            - '-c'
+            - ./producer && tail -f /dev/null
+          resources: {}
+          volumeMounts:
+            - name: shm-volume
+              mountPath: /dev/shm
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+        - name: consumer
+          image: 'image-registry.openshift-image-registry.svc:5000/ipc/ipc-shared-memory:latest'
+          command:
+            - sh
+            - '-c'
+            - sleep 2 && ./consumer && tail -f /dev/null
+          resources: {}
+          volumeMounts:
+            - name: shm-volume
+              mountPath: /dev/shm
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: hostipc-shared-memory
+  labels:
+    app: hostipc-shared-memory
+    app.kubernetes.io/component: hostipc-shared-memory
+    app.kubernetes.io/instance: hostipc-shared-memory
+    app.kubernetes.io/name: hostipc-shared-memory
+    app.kubernetes.io/part-of: hostipc-shared-memory-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hostipc-shared-memory
+  template:
+    metadata:
+      labels:
+        app: hostipc-shared-memory
+        deployment: hostipc-shared-memory
+    spec:
+      containers:
+        - name: producer
+          image: 'image-registry.openshift-image-registry.svc:5000/demo/ipc-shared-memory:latest'
+          command:
+            - sh
+            - '-c'
+            - ./producer && tail -f /dev/null
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+        - name: consumer
+          image: 'image-registry.openshift-image-registry.svc:5000/demo/ipc-shared-memory:latest'
+          command:
+            - sh
+            - '-c'
+            - sleep 2 && ./consumer && tail -f /dev/null
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      nodeName: worker-cluster-jx57b-2
+      hostIPC: true
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
